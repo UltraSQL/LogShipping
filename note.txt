@@ -1,0 +1,36 @@
+####################################################################### 合服步骤 ################################################################
+#
+# 准备阶段：权限申请
+# 		1. 【保留服】访问【被平衡服】的 445、36000、48322 端口
+#
+# 实施阶段：部署日志传送
+# 		1. 编辑配置文件 logshipping.config 文件
+#			(说明：第7个参数bwlimit，带宽限速，单位kbit/s, 0无限速)
+#		2. 获取目的服务器实例IP和端口
+#			awk '{print $1,$2}' logshipping.config | uniq > sec_svr_ip
+# 		3. 上传 logshipping.config、winscp.exp 到【保留服】：
+#			../abs/upload.sh sec_svr_ip logshipping.config
+#			../abs/upload.sh sec_svr_ip winscp.exp
+# 		4. 部署日志传送：
+#			../abs/uag.sh sec_svr_ip 1_perform_ls.sh
+#			(说明：日志传送可与镜像共存，但不能与备份共存，该脚本已停掉完整备份和日志备份)
+# 		5. 传送尾日志：
+#			../abs/uag.sh sec_svr_ip 2_last_ls.sh 
+# 		6. 检查同步关系：
+#			../abs/uag.sh sec_svr_ip 3_check_sync.sh
+# 		7. 手动切换：
+#			../abs/uag.sh sec_svr_ip 4_manual_switch.sh
+# 		8. 移除日志传送：
+#			../abs/uag.sh sec_svr_ip 5_remove_ls.sh
+#
+################################################################################################################################################
+
+############################################################ logshipping.config 文件说明 #######################################################
+# 目的服务器    < <--------------------------------------------------------     源服务器
+# ############ Secondary ##########################     			############## Primary #########################################
+# sec_svr_ip	sec_db_port	sec_db_list					pri_svr_ip	pri_db_port	pri_db_list		bwlimit 
+
+10.14.13.2 	48352		OriginGameDB,OriginGameDb_Log			10.14.13.2 	48332		GameDb,GameDb_Log	0
+10.16.2.80  	48352		OriginGameDB,OriginGameDb_Log			10.16.2.80  	48342		GameDb,GameDb_Log	1024
+10.16.26.80  	48352		OriginGameDB_48352,OriginGameDb_Log_48352	10.16.42.180 	48352		GameDb,GameDb_Log	0
+10.14.134.12 	48352		OriginGameDB,OriginGameDb_Log			10.14.134.20 	48352		GameDb,GameDb_Log	0
